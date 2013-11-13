@@ -1,0 +1,5 @@
+*.gz
+tmp/*
+*.tmp
+/document.pdf
+/tmp
