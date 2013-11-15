@@ -1446,12 +1446,27 @@ and source code management system.
     interfere with each other.
     
 
-\chapter{Future Work}
-	
-\section{Possible Improvements}
-
 \chapter{Conclusion}
-
+    As discussed in \cref{ch:evaluation}, the major bottleneck in the
+    performance of \telesto{} is the database. It is important to note, that we
+    did no experiments to optimize the database configuration. Most likely a
+    more optimal configuration of the database would have improved the overall
+    performance of the system but when looking at the relative time consumption
+    for tasks by middleware workers (\cref{tbl:benchmark}) it is very unlikely
+    that an other part would actually become the new bottleneck.
+	
+	When looking at the completed \telesto{} implementation we are confident to
+	have built a scalable and well performing distributed message passing
+	system that fulfils the given requirements. The number of tests and traces with
+	different metrics we executed, is sufficient to allow for reasonable
+	conclusions and optimization of the most important system and workload
+	parameters.
+	
+	In the end we learned a lot about testing and benchmarking an entire system in
+	a profound way and drawing comprehensible conclusions. Although both of us
+	already had experience in building a large system from scratch, we got a lot of
+	interesting insights in how it could look like when building and especially
+	evaluating a system in the industry which might not even be that far away...
 	
 
 % This displays the bibliography for all cited external documents. All references have to be defined in the file references.bib and can then be cited from within this document.
@@ -1459,10 +1474,10 @@ and source code management system.
 \bibliography{references}
 
 % This creates an appendix chapter, comment if not needed.
-\appendix
-\chapter{Appendix Chapter}
+%\appendix
+%\chapter{Appendix Chapter}
 
-\section{Database Structure}
+%\section{Database Structure}
 
 	
 \end{document}
