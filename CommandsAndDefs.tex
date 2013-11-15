@@ -28,6 +28,14 @@
 \newcommand{\websource}[3]{\footnote{{#1\newline Available at: #2 [Accessed
 #3]}}}
 
+\newcommand\telesto{\textit{Telesto}}
 
+\graphicspath{{figures/}}
 
-\graphicspath{{./figures/}}
+% style whole rows in table
+\usepackage{array}
+\newcolumntype{$}{>{\global\let\currentrowstyle\relax}}
+\newcolumntype{^}{>{\currentrowstyle}}
+\newcommand{\rowstyle}[1]{\gdef\currentrowstyle{#1}%
+  #1\ignorespaces
+}
