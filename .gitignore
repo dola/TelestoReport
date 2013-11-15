@@ -5,3 +5,6 @@ tmp/*
 /tmp
 report.pdf 
 *.thm
+*.aux
+*.log
+
