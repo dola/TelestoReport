@@ -3,5 +3,5 @@ tmp/*
 *.tmp
 /document.pdf
 /tmp
-/report.pdf 
+report.pdf 
 *.thm
