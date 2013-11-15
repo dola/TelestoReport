@@ -161,7 +161,7 @@ ETH Z\"urich}
 	solutions for them.
 	
 	While the first part of the project work is about building the actual
-	system, the second part is all about experimentally evaluate the whole system
+	system, the second part is all about experimentally evaluating the whole system
 	in its key performance characteristics. This includes tasks like running
 	stability and scalability tests but also finding optimal system and workload
 	parameters.
@@ -565,9 +565,6 @@ ETH Z\"urich}
         The varying length payload containing all the arguments of the method
         call or the structured response data.
     \end{description}
-    
-     Figure \TODO{add
-    protocol figure} shows the basic structure of such a packet.
     
     Besides a packet for each method call, there is one for the according
     response if applicable and two additional packets named {\tt SuccessPacket}
@@ -1444,7 +1441,19 @@ and source code management system.
     performance. The second middleware was run on the same {\it EC2} instance as the first one, but
     we payed close attention to the usage of memory, CPU and the network to make sure they wouldn't
     interfere with each other.
-    
+ 
+\section{System Characteristics}
+	Our system generally performed very well and met our expectations. A possibly limiting factory is
+	the single thread handling new connections and incoming data. Even though this proofed to be an
+	effective architecture in our experiments, it could certainly limit the network throughput in
+	situations with a much higher load. The worker threads also share a
+	single request queue which is used extensively but seems to handle almost any number of workers
+	and requests very well. The queue is backed by a fixed array which is slightly faster than
+	a linked queue or similar implementation and should not limit the overall speed of the system.
+	Parsing and emitting packets is very cheap as can be seen
+	in \cref{tbl:benchmark} and the binary network protocol also minimizes the amount of data sent
+	over the network. Overall wi think our system could handle a much higher load than id did in any
+	of our experiments as we have seen in tests run without a database.
 
 \chapter{Conclusion}
     As discussed in \cref{ch:evaluation}, the major bottleneck in the
@@ -1466,7 +1475,7 @@ and source code management system.
 	a profound way and drawing comprehensible conclusions. Although both of us
 	already had experience in building a large system from scratch, we got a lot of
 	interesting insights in how it could look like when building and especially
-	evaluating a system in the industry which might not even be that far away...
+	evaluating a system in the industry, which might not even be that far away...
 	
 
 % This displays the bibliography for all cited external documents. All references have to be defined in the file references.bib and can then be cited from within this document.
