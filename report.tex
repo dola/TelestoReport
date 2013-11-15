@@ -1,0 +1,156 @@
+\documentclass[a4paper, oneside]{csthesis}
+
+% package to be able to use special characters
+\usepackage[utf8]{inputenc}
+
+% Sophisticated math package
+\usepackage{amsmath}
+
+% Special symbols
+\usepackage{amssymb}
+
+% nicely render theorems and proofs
+\usepackage[standard,thmmarks,amsmath]{ntheorem}
+
+\usepackage{graphicx}
+
+% package to format pseudo-code. Check the package documentation.
+% http://ctan.org/pkg/listings
+\usepackage{algorithmic}
+\usepackage{algorithm}
+
+% awesome code highlighting and coloring for many languages
+% http://en.wikibooks.org/wiki/LaTeX/Packages/Listings
+\usepackage{listings}
+\lstset{language=Java}
+
+% Provides \xspace command that evaluates to a space if the next character in the source is a blank and
+% no space if next character is no blank. Useful in command definitions.
+\usepackage{xspace}
+
+% Provides a more flexible tabular environment
+\usepackage{tabularx}
+
+% Enables the use of the H location specifier for float environments that puts the float exactly where it is located in the source.
+\usepackage{float}
+
+% Enables the use of colours
+\usepackage{color}
+
+\usepackage{paralist}
+
+\definecolor{darkblue}{rgb}{0,0,.5}
+% Enables clickable links in the PDF and additional PDF specific configuration options.
+\usepackage[
+            colorlinks=true,
+            linkcolor=darkblue, urlcolor=darkblue, citecolor=darkblue,
+						raiselinks=true,
+            bookmarks=true,
+            bookmarksopenlevel=1,
+            bookmarksopen=true,
+            bookmarksnumbered=true,
+            hyperindex=true,
+            plainpages=false,
+            pdfpagelabels=true,
+            pdfstartview=FitH,
+            pdfstartpage=1,
+            pdfpagelayout=OneColumn
+            ]{hyperref}
+
+% Provides a highly configurable way to create references inside the document and automatically prefix
+% the number reference by fig./eq./chapter and so on. You only have to use \cref{label} or \Cref{label}
+% to obtain "Lemma 4.1" or "Corollary 4.1" etc., depending on the label. See an example in the proof
+% of the first theorem or check the documentation of the package for further information.
+\usepackage[noabbrev]{cleveref}
+
+
+% awesome figure placment
+\usepackage{subfigure}
+
+% Load own command definitions, a few helpful ones are already defined there.
+\input{CommandsAndDefs}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DOCUMENT METADATA
+
+\thesistype{Report Group 32}
+\title{Telesto - A Distributed Message Passing System}
+
+\author{Dominic Langenegger, Simon Marti}
+\email{\{dominicl,simarti\}@student.ethz.ch}
+\institute{Advanced Systems Lab 2013 \\[2pt]
+Systems Group \\[2pt]
+ETH Zürich}
+
+% You can put in your own logo here "\includegraphics{...}" or just comment the command
+% \logo{}
+
+\supervisors{Markus Pilman\\[2pt] Prof.\ Dr.\ Gustavo Alonso}
+
+% You can comment the following two commands if you don't need them
+\keywords{}
+%\categories{ACM categories go here.}
+
+\date{November 15, 2013}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\frontmatter
+\maketitle % do not remove this line
+
+\cleardoublepage
+
+%\begin{acknowledgements}
+%\end{acknowledgements}
+
+
+\begin{abstract}
+	This document describes {\it Telesto}, a distributed message passing system
+	built as mandatory course work for the course {\it Advanced Systems Lab} at ETH
+	Zurich in autumn semester 2013.
+\end{abstract}
+
+\tableofcontents
+
+\mainmatter % do not remove this line
+
+% Start writing here
+\chapter{Introduction}
+	
+
+\section{Motivation}
+
+	
+
+\chapter{Goals}
+
+	
+
+
+
+\chapter{Future Work}
+	
+	
+	
+\section{Possible Improvements}
+
+
+\chapter{Conclusion}
+
+	
+
+% This displays the bibliography for all cited external documents. All references have to be defined in the file references.bib and can then be cited from within this document.
+\bibliographystyle{splncs}
+\bibliography{references}
+
+% This creates an appendix chapter, comment if not needed.
+\appendix
+\chapter{Appendix Chapter}
+
+\section{Database Structure}
+
+	
+\end{document}
