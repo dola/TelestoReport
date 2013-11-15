@@ -506,7 +506,7 @@ ETH Z\"urich}
             Ping & 0x01 & \\
             Pong & 0x02 & \\
             Success & 0x03 & \\
-            Error & $0x05$ & error\_type\\
+            Error & $0x05$ & error\_type, error\_string \\
             \hline
             \rowcolor{Gray}
             \multicolumn{3}{c}{Client Manipulation} \\
@@ -920,15 +920,148 @@ and source code management system.
         easy usage.}
         \label{tbl:client-api}
     \end{table}
+    
+    The networking of the client is mostly shared with the one in the middleware
+    but does not need any special {\tt ProtocolHandler} because it doesn't
+    directly use any content of the response packets. Those are directly handled
+    in the {\tt TelestoClient} where the returned packet is casted to the right
+    response packet before the information is extracted and returned to the user
+    calling the API function.
 
 \section{Error Handling}
-
+    Other than just handling errors within a single application, \telesto{} has
+    to handle errors that occur in an other part of the system appropriately.
+    This is the case if something goes wrong in the middleware which makes it
+    necessary to inform the client that his request could not be executed. In
+    order to do this, there exists a special {\tt ErrorPacket} (as introduced
+    in \cref{sec:protocol}) that contains an error number and an error message.
+    
+    Possible error codes are stored in the enum {\tt ErrorType} and are listed
+    in \cref{tbl:error-codes} together with a short description.
+    
+    \begin{table}[ht]
+        \centering
+        
+        \begin{adjustbox}{center}
+            \rowcolors{1}{Gray}{white}
+            \begin{tabular}{$l^p{8cm}}
+                \rowcolor{DarkGray}
+                \rowstyle{\bfseries}
+                ErrorType & Description \\
+                \hline
+                \rowcolor{DarkGray}
+                \multicolumn{2}{c}{Unexpected} \\
+                \hline
+                INTERNAL\_ERROR & A typically unexpected error \\
+                IO\_ERROR & An error during network interaction \\
+                
+                \hline
+                \rowcolor{DarkGray}
+                \multicolumn{2}{c}{Client Error} \\
+                \hline
+                UNEXPECTED\_PACKET & A packet that could not be handled was
+                received
+                \\
+                UNIQUE\_CONSTRAINT & A unique constraint was violated \\
+                QUEUE\_NAME\_NOT\_UNIQUE & The specified {\tt queue\_name} is
+                not unique \\
+                CLIENT\_NAME\_NOT\_UNIQUE & The specified {\tt client\_name} is
+                not unique \\ 
+                CLIENT\_NOT\_EXISTING & The specified client does not exist \\
+                QUEUE\_NOT\_EXISTING & The specified queue does not exist \\
+                REQUIRED\_PARAMETER\_MISSING & A required parameter in a packet
+                is missing \\
+                CLIENT\_MODE\_PERMISSION\_VIOLATION & The {\tt ClientMode}
+                prohibits the use of the called service \\
+                
+                \hline
+                \rowcolor{DarkGray}
+                \multicolumn{2}{c}{Client Notification} \\
+                \hline
+                
+                NO\_ACTIVE\_QUEUES\_EXISTING & No queues contains messages for
+                the client \\
+                NO\_QUEUES\_EXISTING & There exist absolutely no queues \\
+                NO\_MESSAGES\_IN\_QUEUE & There are no messages in the specified
+                queue \\
+                NO\_MESSAGES\_RETRIEVED & A receive query did not yield any
+                messages \\
+                
+                
+                
+            \end{tabular}
+        \end{adjustbox}
+        \caption{Error codes in the system. Specified in the class {\tt
+        ErrorType}.}
+        \label{tbl:error-codes}
+    \end{table}
+    
+    Additionally two special exceptions were introduced to handle errors within
+    the system in a simple way:
+    \begin{enumerate}
+        \item {\tt ProcessingException} on the client
+        \item {\tt PacketProcessingException} on the middleware
+    \end{enumerate}
+    Both exceptions allow to specify an {\tt ErrorType} and can include nested
+    exceptions.
+    
+    When a {\tt PacketProcessingException} is thrown in the middleware, it is
+    automatically caught and sent to the client in an {\tt ErrorPacket} where it
+    is again processed into a {\tt ProcessingException} which is handled
+    accordingly or thrown to the user.
+    
+\subsection{Logging}
+    \telesto{} does not only have a solid error and exception system but also
+    uses logging in many places to allow for deep investigation of possible
+    problems. For this purpose we introduced the statically accessed {\tt Log}
+    class that operates as a facade to {\tt java.util.logging}\websource{
+    Java Documentation: java.util.logging
+    }{http://docs.oracle.com/javase/7/docs/api/java/util/logging/package-summary.html}{
+    November 15, 2013}
+    . The use of
+    the built in {\it Java} logging interface, allows to configure logging
+    parameters in a very convenient and powerful way.
 
 \section{Configuration}
+    To configure client and middleware instances, \telesto{} uses both a
+    configuration file and command line parameters. The following two sections
+    briefly describe how both work.
+    
+\subsection{Configuration File}
+    Both the client and the middleware use the same global {\tt
+    config.properties} file to read the configuration for the current run. If no
+    such file is present in the execution directory, then a default version is
+    extracted from within the compiled {\tt .jar} file.
+    
+    This configuration file is a simple {\it Java Properties}
+    file\websource{Java Documentation: java.util.Properties
+    }{http://docs.oracle.com/javase/7/docs/api/java/util/Properties.html}{November
+    15, 2013} containing parameters like the middleware address or database
+    connection information. Details about these parameters are explained in
+    \TODO{ref: section with parameters for test}.
 
+\subsection{Command Line Parameters}
+    Even if the code base is organized in a way that would allow building
+    multiple {\tt .jar} files for client and middleware, we decided to just
+    build one and use command line parameters in order to determine which part
+    to start. This makes it more convenient to do tests because only one {\tt
+    .jar} file has to be distributed over many machines.
+   
+    The first parameter always determines which tier should be started. The
+    values ``MW'' and ``CL'' stand for middleware and client respectively.
+    Only the client takes some additional arguments to control the following
+    parameters:
+    
+    \begin{description}
+    \item[name] The {\tt client\_name} to be used (registers new client)
+    \item[id] The {\tt client\_id} (identifies as existing client)
+    \item[test] An identifier for the test to run (see section \TODO{section
+    with client types})
+    \end{description}
 
-\section{Profiling}
-
+    These additional arguments are always supplied as key-value pairs separated
+    by a space character. Of the name and the client id only one has to be
+    specified.
 
 \chapter{Evaluation and Analysis}
 \label{ch:evaluation}
@@ -955,7 +1088,7 @@ and source code management system.
         \end{minipage}
         \begin{minipage}[t]{0.45\textwidth}
             \centering
-            \includegraphics[width=0.9\textwidth]{jukefox-streamplayer1}
+            \includegraphics[width=0.9\textwidth]{jukefox-streamplayer1.png}
             \caption{The jukefox music streaming view.}
             \label{fig:stream_player}
         \end{minipage}
