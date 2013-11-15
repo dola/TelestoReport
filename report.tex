@@ -52,6 +52,7 @@
 \usepackage{adjustbox}
 
 \definecolor{DarkGray}{gray}{0.7}
+\definecolor{MiddleGray}{gray}{0.8}
 \definecolor{Gray}{gray}{0.9}
 
 \definecolor{darkblue}{rgb}{0,0,.5}
@@ -381,7 +382,7 @@ ETH Z\"urich}
             Name & Parameters & Return Value & Description\\
             \hline
 
-            \rowcolor{DarkGray}
+            \rowcolor{MiddleGray}
             \multicolumn{4}{c}{Client Manipulation} \\
             \hline
             request\_id & 
@@ -392,7 +393,7 @@ ETH Z\"urich}
             delete\_client & client\_id & client\_id & delete a client \\
             
             \hline
-            \rowcolor{DarkGray}
+            \rowcolor{MiddleGray}
             \multicolumn{4}{c}{Queue Manipulation} \\
             \hline
             create\_queue & queue\_name & Queue & creates a new queue \\
@@ -407,7 +408,7 @@ ETH Z\"urich}
             message in a queue \\
             
             \hline
-            \rowcolor{DarkGray}
+            \rowcolor{MiddleGray}
             \multicolumn{4}{c}{Message Manipulation} \\
             \hline
             put\_message & 
@@ -498,6 +499,7 @@ ETH Z\"urich}
     
     \begin{table}[hp]
         \centering
+        \rowcolors{1}{Gray}{white}
         \begin{tabular}{$l^c^r}
             \rowcolor{DarkGray}
             \rowstyle{\bfseries}
@@ -508,7 +510,7 @@ ETH Z\"urich}
             Success & 0x03 & \\
             Error & $0x05$ & error\_type, error\_string \\
             \hline
-            \rowcolor{Gray}
+            \rowcolor{MiddleGray}
             \multicolumn{3}{c}{Client Manipulation} \\
             \hline
             RegisterClient & 0x11 & client\_name, mode\\
@@ -517,7 +519,7 @@ ETH Z\"urich}
             IdentifyClientResponse & 0x14 & mode, client\_name\\
             DeleteClient & 0x15 & client\_id\\
             \hline
-            \rowcolor{Gray}
+            \rowcolor{MiddleGray}
             \multicolumn{3}{c}{Queue Manipulation} \\
             \hline
             CreateQueue & 0x21 & queue\_name\\
@@ -534,7 +536,7 @@ ETH Z\"urich}
             GetMessages & 0x2d & queue\_id\\
             GetMessagesResponse & 0x2e & array[Message]\\
             \hline
-            \rowcolor{Gray}
+            \rowcolor{MiddleGray}
             \multicolumn{3}{c}{Message Manipulation} \\
             \hline
             PutMessage & 0x31 & Message, array[queue\_id]\\
@@ -859,7 +861,7 @@ and source code management system.
                 \rowstyle{\bfseries}
                 Method & Parameters & Return Value & Description \\
                 \hline
-                \rowcolor{DarkGray}
+                \rowcolor{MiddleGray}
                 \multicolumn{4}{c}{Setup} \\
                 \hline
                 
@@ -871,7 +873,7 @@ and source code management system.
                 existing client \\
                 
                 \hline
-                \rowcolor{DarkGray}
+                \rowcolor{MiddleGray}
                 \multicolumn{4}{c}{Queues} \\
                 \hline
                 createQueue & queueName & Queue & create a new queue \\
@@ -886,7 +888,7 @@ and source code management system.
                 \\
                 
                 \hline
-                \rowcolor{DarkGray}
+                \rowcolor{MiddleGray}
                 \multicolumn{4}{c}{Messages} \\
                 \hline
                 putMessage & Message &  & insert a new message \\
@@ -949,14 +951,14 @@ and source code management system.
                 \rowstyle{\bfseries}
                 ErrorType & Description \\
                 \hline
-                \rowcolor{DarkGray}
+                \rowcolor{MiddleGray}
                 \multicolumn{2}{c}{Unexpected} \\
                 \hline
                 INTERNAL\_ERROR & A typically unexpected error \\
                 IO\_ERROR & An error during network interaction \\
                 
                 \hline
-                \rowcolor{DarkGray}
+                \rowcolor{MiddleGray}
                 \multicolumn{2}{c}{Client Error} \\
                 \hline
                 UNEXPECTED\_PACKET & A packet that could not be handled was
@@ -975,7 +977,7 @@ and source code management system.
                 prohibits the use of the called service \\
                 
                 \hline
-                \rowcolor{DarkGray}
+                \rowcolor{MiddleGray}
                 \multicolumn{2}{c}{Client Notification} \\
                 \hline
                 
@@ -1093,6 +1095,7 @@ and source code management system.
 	
 	\begin{table}[hp]
         \centering
+        \rowcolors{1}{Gray}{white}
         \begin{tabular}{$l^c^r}
             \rowcolor{DarkGray}
             \rowstyle{\bfseries}
@@ -1100,14 +1103,14 @@ and source code management system.
             \hline
             Running time & 10 minutes \\
             \hline
-            \rowcolor{Gray}
+            \rowcolor{MiddleGray}
             \multicolumn{2}{c}{Client} \\
             \hline
             Number of instances & 90 \\
             Retry delay & 100ms \\
             Network buffer size & 32KB \\
             \hline
-            \rowcolor{Gray}
+            \rowcolor{MiddleGray}
             \multicolumn{2}{c}{Middleware} \\
             \hline
             Number of instances & 1 \\
