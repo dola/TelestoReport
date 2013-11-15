@@ -694,7 +694,7 @@ and source code management system.
     this data structure is backed by a simple array, runtime for inserting and
     removing from the queue always stays $\mathcal{O}(1)$.
     
-    The drawback of this implementation, is that the queue has a limited size
+    The drawback of this implementation is that the queue has a limited size
     that is initially set and cannot be changed during execution.
     This however is not a problem because with the synchronous I/O in the
     clients, where they always wait for a response before requesting another
@@ -1065,33 +1065,136 @@ and source code management system.
 
 \chapter{Evaluation and Analysis}
 \label{ch:evaluation}
+	This chapter gives an overview of the experiments conducted with \telesto{} and
+	their results and implications.
 
 \section{Setup}
+	We conducted all experiments on the {\it Amazon Elastic Compute Cloud}\websource{Amazon EC2
+    Website}{http://aws.amazon.com/ec2/}{November 15, 2013} (EC2).
+    One large general purpose instance was used for each the database, the middlware and the clients.
+    The experiments were controlled by a fourth instance which was allowed shell access on all of the
+    other ones. All instances were placed on the same sub-network withing {\it Amazon}'s network in order
+    to minimize network latency.
+    
+    The experiments were controlled by a single configuration file which was distributed by
+    the controlling instance to the clients and the middleware automatically for each test.
+    Given a number of these configuration files the controlling instance was able to run multiple
+    experiments completely autonomous.
+    
+    The clients and the middleware are built to measure the duration of each phase a request goes
+    through and write the results into a log file which is collected by the controlling instance
+    and can then be processed.
 
+\newpage
 \section{Parameters}
+	All experiments were run with the same basic parameters, save the ones being experimented on.
+	Before each experiment the database was emptied to get consistent results.
+	The default parameters are listed in \cref{tbl:parameters}.
+	
+	\begin{table}[hp]
+        \centering
+        \begin{tabular}{$l^c^r}
+            \rowcolor{DarkGray}
+            \rowstyle{\bfseries}
+            Parameter & value\\
+            \hline
+            Running time & 10 minutes \\
+            \hline
+            \rowcolor{Gray}
+            \multicolumn{2}{c}{Client} \\
+            \hline
+            Number of instances & 90 \\
+            Retry delay & 100ms \\
+            Network buffer size & 32KB \\
+            \hline
+            \rowcolor{Gray}
+            \multicolumn{2}{c}{Middleware} \\
+            \hline
+            Number of instances & 1 \\
+            Network buffer size & 32KB \\
+            Worker pool size & 25 \\
+            Database pool size & 25 \\            
+        \end{tabular}
+        \caption{Default parameters for experiments}
+        \label{tbl:parameters}
+    \end{table}
 
 \section{Metrics}
+	\begin{description}
+		\item[Middleware response time] \ \\
+		    Time the client waits for a response after sending a request to the server.
+		\item[Packet parsing duration] \ \\
+		    Time the middleware needs to parse a request from a client.
+		\item[Database response time] \ \\
+		    Time the middleware waits for a response from the database after making a request.
+		\item[Packet emitting duration] \ \\
+		    Time the middleware needs to construct and send a response to the client. 
+		\item[Middleware worker downtime] \ \\
+		    Time a worker instance of the middleware waits before receiving a client request to handle.
+		\item[Packet throughput] \ \\
+		    Number of network packets sent by the middleware.
+		\item[Message throughput] \ \\
+		    Number of messages successfully received by a client.
+	\end{description}
 
 \section{Tests}
 
 \subsection{Scalability}
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/worker}
+        \caption{Throughput and response time for varying number of worker instances}
+        \label{fig:worker}
+    \end{figure}
+    
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/db}
+        \caption{Throughput and response time for varying number of database connections}
+        \label{fig:db}
+    \end{figure}
+
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/db+worker}
+        \caption{Throughput and response time for varying number of worker instances and database connections}
+        \label{fig:db+worker}
+    \end{figure}
+
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/client-delay}
+        \caption{Throughput and response time for varying client retry delay}
+        \label{fig:client-delay}
+    \end{figure}
+
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/client}
+        \caption{Throughput and response time for varying number of clients}
+        \label{fig:client}
+    \end{figure}
+    
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/multi}
+        \caption{Throughput and response time for varying number of clients with both one and two middleware instances}
+        \label{fig:multi}
+    \end{figure}
+    
 \subsection{Stability}
-
-
-    \begin{figure}[htbp]
-        \centering
-        \begin{minipage}[t]{0.45\textwidth}
-            \centering
-            \includegraphics[width=0.9\textwidth]{jukefox-explore-album-list-1.png}
-            \caption{The album list containing suggested albums.}
-            \label{fig:album_list1}
-        \end{minipage}
-        \begin{minipage}[t]{0.45\textwidth}
-            \centering
-            \includegraphics[width=0.9\textwidth]{jukefox-streamplayer1.png}
-            \caption{The jukefox music streaming view.}
-            \label{fig:stream_player}
-        \end{minipage}
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/throughput}
+        \caption{Throughput measured every second and averaged over an interval of one minute.}
+        \label{fig:throughput}
+    \end{figure}
+    
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/response-time}
+        \caption{Middleware response time for different request types, averaged over an interval of one minute.}
+        \label{fig:response-time}
     \end{figure}
 
 \chapter{Future Work}
