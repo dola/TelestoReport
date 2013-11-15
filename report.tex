@@ -359,8 +359,8 @@ ETH Zürich}
     
     To simplify the database abstraction in the middleware we tried to produce
     very consistent return values. All functions either return tables of Queues,
-    Messages, Clients or single integers. (where many are constrained to a
-    single entry) For error handling, unique constraint violations are detected
+    Messages, Clients, a set of integers or single integers. (where many are
+    constrained to a single entry) For error handling, unique constraint violations are detected
     by the middleware and both {\tt put\_message} and {\tt put\_messages} return
     the {\tt queue\_ids} of the queues successfully inserted to (an id might be
     missing if the queue did not exist). Like this, errors from the database can
@@ -641,16 +641,200 @@ implementation phase of \telesto. This is a good starting point before getting
 involved with the code base of the system as it gives the necessary orientation
 and overview.
 
+The whole code base is organized into six java packages that resemble the
+different parts of \telesto:
+
+\begin{description}
+\item[ch.ethz.syslab.telesto.client] \ \\
+    The \telesto{} client including the API and multiple specific
+    implementations for different tests in the subpackage {\tt test}.
+\item[ch.ethz.syslab.telesto.common] \ \\
+    All the parts that are shared between the middleware and the client
+    implementation with for example model classes for all entities, the
+    configuration and the protocol.
+\item[ch.ethz.syslab.telesto.console] \ \\
+    The implementation of the management console displaying all important
+    information of the system.
+\item[ch.ethz.syslab.telesto.profile] \ \\
+    Classes specifically used for profiling and benchmark logging. These are
+    used by both the client and the middleware.
+\item[ch.ethz.syslab.telesto.server] \ \\
+    The \telesto{} middleware with all database related functionality in the
+    subpackage {\tt db}, the dispatcher and worker thread implementations in the
+    subpackage {\tt network} and the protocol handlers in the subpackage {\tt
+    controller}.
+\item[ch.ethz.syslab.telesto.test] \ \\
+    An extensive test suite containing jUnit tests for many different parts of
+    the system.
+\end{description}
+
+We chose to develop \telesto{} using {\it Eclipse (Version 4.3.1
+Kepler)}\websource{Eclipse website}{http://eclipse.org/}{November 15, 2013}
+as integrated development environment (IDE) and {\it
+git}\websource{Official git website}{http://git-scm.com/}{November 15, 2013}
+with a (private) {\it Github}\websource{Github
+website}{https://github.com/}{November 15, 2013} repository as version control
+and source code management system.
+
 
 \section{Networking}
     In order to make networking efficient and fast, it is essential that
     involved parts of the system are never a bottleneck to the entire system
     performance.
     
+    The crucial part of this is optimizing the load on the dispatcher (i.e. an
+    instance of the class {\tt ConnectionHandler}) and limiting the overhead of
+    distributing the tasks over all the workers (i.e. instances of {\tt
+    DataHandler}).
+    This is why \telesto{} uses a {\tt ArrayBlockingQueue<Connection>} to manage incoming requests that can then be
+    processed by worker threads in a first-in-first-out (FIFO) manner. Since
+    this data structure is backed by a simple array, runtime for inserting and
+    removing from the queue always stays $\mathcal{O}(1)$.
+    
+    The drawback of this implementation, is that the queue has a limited size
+    that is initially set and cannot be changed during execution.
+    This however is not a problem because with the synchronous I/O in the
+    clients, where they always wait for a response before requesting another
+    service, the maximum number of connections in the queue should never
+    actually grow larger than the number of clients. Therefore it is sufficient
+    to ensure that the number of clients is always lower than the queue size.
+    
+    In a scenario where clients would asynchronously send many requests
+    simultaneously or the number of clients is much higher than the queue size,
+    it becomes possible, that the dispatcher becomes blocked when trying to put
+    a connection into the queue because it is already full. If the system is
+    expected to run under such circumstances, then it would be necessary to
+    improve the implementation for this special workload e.g. by dynamically
+    replacing the queue with an other larger one or by just rejecting all
+    incoming requests while the queue is full.
+    
+    However in the settings where \telesto{} was tested in this was not critical
+    and the chosen implementation proofed to be fast enough to never become a
+    bottleneck to the whole system.
+    
+    
 \subsection{Packet parsing}
+    A special part of \telesto{} is its binary packet format (see
+    \cref{sec:protocol}) which requires special handling of the incoming data
+    for every method supported. For this purpose, the package {\tt
+    ch.ethz.syslab.telesto.common.protocol}, contains one class for every packet
+    with the following components (as specified in the abstract class {\tt
+    Packet}):
+    
+    \begin{enumerate}
+        \item All the parameters that are part of the packet as fields
+        \item The method {\tt emit()} to write the fields to a {\tt
+        ByteBuffer}
+        \item The method {\tt parse()} to build a packet instance from
+        a {\tt ByteBuffer}
+    \end{enumerate}
 
+    Because it is a rather ungrateful task to write about $30$ packet classes
+    and according handlers that share many lines of code, we built an automated
+    {\it Python}\websource{Python Website}{http://python.org/}{November 15, 2013}
+    script to generate all packet and packet handling classes using {\it
+    jinja2}\websource{Jinja2
+    Documentation}{http://jinja.pocoo.org/docs/}{November 15, 2013} templates
+    and a small configuration specifying what packets exist with what fields.
+    
+    The code for this tasks is available under {\tt tools/protocol/} with the
+    packet specification in the source file {\tt messages.py}. The initial
+    effort to build this small tool was very much worth it because it makes
+    actually changing the protocol or the methods and implementation of a class
+    very easy because all handler and packet classes can be regenerated using
+    very little effort.
+    
+\subsection{Packet handling}
+    Each worker parses incoming data using the static method {\tt
+    create(ByteBuffer)} in the abstract {\tt Packet} class which creates an
+    instance of the right packet class using the method id at the very beginning
+    of the packet data and lets this instance's {\tt parse(ByteBuffer)} method
+    handle the parsing of the individual fields.
+    
+    The built packet instance containing all information that was sent over
+    the network is then handled by a {\tt ProtocolHandler} that contains a
+    method {\tt handle()} that is overloaded to take every existing packet as
+    input and returning a packet as response to be sent back to the client. This
+    class is actually also generated by the above mentioned automated python
+    script to contain all the necessary methods.
+    
+    For the overloading to correctly work with the dynamic typing and
+    instantiation of the packet classes, it is necessary to use the visitor
+    pattern on the packet classes to let them call the handle method for
+    themself.
+    
+    \telesto contains two different implementations for the {\tt
+    ProtocolHandler}:
+    \begin{description}
+    \item[ServerAuthenticationProtocolHandler] \ \\
+        The protocol handler for all the packets that are allowed to send before
+        authentication. An instance of this class is switched out by one of
+        {\tt ServerProtocolHandler} as soon as authentication is completed.
+    \item[ServerProtocolHandler] \ \\
+        The actual protocol handler that handles all packets that are sent to a
+        middleware instance. Each {\tt handle()} methods contains the necessary
+        logic to query the database and build a response for the client.
+    \end{description} 
 
-\section{Database Interaction}
+    In order to handle packets that should not be sent to the server (i.e.
+    response packets), the abstract {\tt ProtocolHandler} just throws an
+    appropriate exception that is converted into an {\tt ErrorPacket} upon
+    catching in the worker to notify the client of his misbehaving.
+
+\section{Database}
+    As explained in \cref{sec:db}, \telesto{} uses stored procedures for all
+    database interaction. Using the {\it PostgreSQL JDBC} driver, it is rather
+    easy to make calls to such a procedure but a lot of code lines goes into
+    error handling, statement generation (i.e. setting parameters) and reading
+    out the response data and build entity instances.
+    
+    This is why we built a heavy abstraction around the {\it JDBC} driver that
+    is able to share most of the code and takes care of statement generation,
+    error handling and directly returns appropriate entity objects (or lists) to
+    be used in the response packets. Using this abstraction layer, it is
+    possible to initiate all database action using a single line of code in the
+    {\tt ProtocolHandler} implementation.
+    
+    As seen in \cref{sec:stored-procedures}, there are only five different
+    return value types for all procedures:
+    
+    \begin{enumerate}
+        \item Table of Clients
+        \item Table of Queues
+        \item Table of Messages
+        \item Set of Integers
+        \item Single Integer
+    \end{enumerate}
+    
+    Therefore our abstraction contains an {\tt enum} in the package {\tt
+    db.procedure} for each of the first three where all available stored
+    procedure are enumerated according to their return value. Procedures
+    returning integers are included in the {\tt enum} that best categorizes
+    them.
+    
+    By offering a simple method on the {\tt Database} class (which does all
+    database related work) for each of the above stated types, it is possible to
+    directly return the according instances and control (to some extent) that
+    only procedures really producing that output type can be called. The
+    signature of such a function looks like this:
+    
+    \begin{center}
+        {\tt public List<Message> callMessageProcedure(MessageProcedure proc,
+        Object... arguments)}
+    \end{center}
+
+    Each {\tt enum} value contains the necessary information to assign the
+    right types to the arguments, the return type and the name of the stored
+    procedure in the database.
+    
+\subsection{Connection Pool}
+    For the implementation of the database connection pool, \telesto{}
+    completely relies on the {\it PostgreSQL JDBC} driver which
+    offers a complete implementation in the {\tt
+    PGPoolingDataSource}\websource{PGPoolingDataSource in the PostgreSQL JDBC
+    driver documentation
+    }{http://jdbc.postgresql.org/documentation/publicapi/org/postgresql/ds/PGPoolingDataSource.html}{November 15, 2013}
+    class.
 
 
 \section{Client}
@@ -736,6 +920,11 @@ and overview.
 
 \section{Error Handling}
 
+
+\section{Configuration}
+
+
+\section{Profiling}
 
 
 \chapter{Evaluation and Analysis}
