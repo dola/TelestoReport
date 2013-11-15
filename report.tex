@@ -128,9 +128,16 @@ ETH Z\"urich}
 	built as mandatory course work for the course {\it Advanced Systems Lab} at ETH
 	Zurich in autumn semester 2013.
 	
-	
-	
-	\TODO{final findings}
+    After a short introduction, we describe the detailed architecture of the
+    system and share some important implementation aspects before presenting
+    various measurements on the running system that show stability, scalability
+    and performance under different configurations. The measurements are
+    discussed in detail and associated with the architecture in order to
+    identify bottlenecks with respect to multiple performance metrics.
+    
+    A final conclusion summarizes our experience and learnings out of the whole
+    project.
+
 \end{abstract}
 
 \tableofcontents
@@ -139,11 +146,83 @@ ETH Z\"urich}
 
 % Start writing here
 \chapter{Introduction}
+	For the Advanced Systems Lab course at ETH Zurich, students (in groups of two)
+	have to build their own distributed message passing system following a very
+	openly formulated project description~\cite{asl:course-description} which
+	describes the most important requirements.
 	
+	The requirements specify the basic architecture of the system and its
+	minimal functionality, but a very large part of the actual design of the system
+	is leaved to the students. This is actually very beneficial for them because for
+	many of them it is the first time they build such a large system from scratch
+	and it is very educational to encounter all possible problems and actually find
+	solutions for them.
+	
+	While the first part of the project work is about building the actual
+	system, the second part is all about experimentally evaluate the whole system
+	in its key performance characteristics. This includes tasks like running
+	stability and scalability tests but also finding optimal system and workload
+	parameters.
+	
+    In this second part, the task is not only to measure certain characteristics but
+    also to learn how they arise and why the system behaves like it does.
+	
+	This report summarizes the entire project work during the design,
+	implementation and evaluation of \telesto, the distributed message passing
+	system built for the Advanced Systems Lab course in autumn semester 2013 by
+	Dominic Langenegger and Simon Marti.
+	
+	
+\section{Requirements}
+    For the completeness of this document, we list the most important
+    requirements of the distributed message passing system built (for details
+    consult~\cite{asl:course-description} directly):
+    
+    \begin{itemize}
+        \item The system consists of three tiers; i.e. a database, one or
+        multiple middlewares and many clients.
+        \item Clients only communicate with one middleware (and not with the
+        database)
+        \item The system lets clients manage queues containing messages by
+        inserting and reading (while deleting) from them
+        \item The whole system is built in {\it Java} using {\it PostgreSQL} as
+        underlying database
+        \item No external libraries exception for the {\it PostgreSQL JDBC}
+        driver are allowed as part of the actual system. Also prohibited is the
+        use of the {\it Java Persistence API (JPA)} and {\it Remote Method
+        Invocation (RMI)}.
+        \item The tests of the system should include at least one long running
+        (\textgreater 2h) trace and many micro benchmarks analyzing separate
+        parts of a messages way through the system. 
+        \item Tests have to be repeated often enough to achieve statistical
+        significance for the results
+    \end{itemize}
 
+    The project description contains various hints on how the system could be
+    built in order to achieve a state of the art implementation that has good
+    performance and is easy to evaluate during the testing phase.
 
 \chapter{Goals}
+    The goals for building \telesto{} was clearly producing a fast and very
+    performant system with high scalability and stability. We especially put
+    emphasis on creating an efficient way to communicate between client and
+    the middleware using a lightweight packet format and capable request
+    handling system.
 
+	After an initial design phase we came up with a system supporting push based
+	communication and complex caching on middlewares. We realized at the latest
+	when a short {\it FAQ}~\footnote{Frequently Asked Questions} was published
+	saying that we should build a pull based system, that our architecture was way
+	too complex and can be replaced by a simpler, more transparent design.
+	
+	Out of this experience our aim to build a fast system shifted more to a system
+	that is not only fast but also easy to test and understand in its details. Only
+	with this in mind during implementation it is feasible to actually test the
+	system in enough detail to be able to understand and correctly interpret the
+	results.
+	
+	In the end we clearly wanted to analyze and identify the bottlenecks in
+	\telesto{} with respect to various performance metrics.
 	
 \chapter{Architecture}
     This chapter explains the basic architecture of \telesto{} explaining how each
@@ -1148,7 +1227,7 @@ and source code management system.
         \begin{tabular}{$l^c^r}
             \rowcolor{DarkGray}
             \rowstyle{\bfseries}
-            Parameter & value\\
+            Parameter & Value\\
             \hline
             Running time & 10 minutes \\
             \hline
