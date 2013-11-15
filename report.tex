@@ -12,6 +12,8 @@
 % Special symbols
 \usepackage{amssymb}
 
+\usepackage{siunitx}
+
 % nicely render theorems and proofs
 \usepackage[standard,thmmarks,amsmath]{ntheorem}
 
@@ -244,7 +246,7 @@ ETH Z\"urich}
             one middleware instance.
     \end{description}
 
-    Figure~\cref{fig:telesto-architecture} shows a sample architecture diagram.
+    \Cref{fig:telesto-architecture} shows a sample architecture diagram.
     It is important to note, that clients only talk to middlewares and only a
     middleware has direct access to the database.
 
@@ -1268,58 +1270,30 @@ and source code management system.
 		    Number of messages successfully received by a client.
 	\end{description}
 
-\section{Tests}
+\section{Experiments}
+	The experiments were generally run for 10 or 5 minutes to make sure the relative confidence interval
+	for a certainty of 95\% is alwasy lower than 5\%. We never experienced messages or packets being
+	dropped during any of the conducted experiments.
 
-\subsection{Scalability}
-    \begin{figure}[ht]
-    \centering
-        \includegraphics[width=0.9\textwidth]{graphs/worker}
-        \caption{Throughput and response time for varying number of worker instances}
-        \label{fig:worker}
-    \end{figure}
-    
-    \begin{figure}[ht]
-    \centering
-        \includegraphics[width=0.9\textwidth]{graphs/db}
-        \caption{Throughput and response time for varying number of database connections}
-        \label{fig:db}
-    \end{figure}
-
-    \begin{figure}[ht]
-    \centering
-        \includegraphics[width=0.9\textwidth]{graphs/db+worker}
-        \caption{Throughput and response time for varying number of worker instances and database connections}
-        \label{fig:db+worker}
-    \end{figure}
-
-    \begin{figure}[ht]
-    \centering
-        \includegraphics[width=0.9\textwidth]{graphs/client-delay}
-        \caption{Throughput and response time for varying client retry delay}
-        \label{fig:client-delay}
-    \end{figure}
-
-    \begin{figure}[ht]
-    \centering
-        \includegraphics[width=0.9\textwidth]{graphs/client}
-        \caption{Throughput and response time for varying number of clients}
-        \label{fig:client}
-    \end{figure}
-    
-    \begin{figure}[ht]
-    \centering
-        \includegraphics[width=0.9\textwidth]{graphs/multi}
-        \caption{Throughput and response time for varying number of clients with both one and two middleware instances}
-        \label{fig:multi}
-    \end{figure}
-    
 \subsection{Stability}
+	To measure the stability of our system we ran it with the default configuration for 2 hours without
+	interruption. 
+
     \begin{figure}[ht]
     \centering
         \includegraphics[width=0.9\textwidth]{graphs/throughput}
         \caption{Throughput measured every second and averaged over an interval of one minute.}
         \label{fig:throughput}
     \end{figure}
+
+	\Cref{fig:throughput} shows the message and packet throughput as measured by the clients over time.
+	The throughput was measured every second and averaged over the interval of one minute in the shown figure.
+	
+	It is clearly visible that our system is fairly stable over such a long period of time. The small variation
+	seen especially in the packet throughput most likely originated in the unpredictable network environment
+	of the {\it Amazon Cloud}. It is further visible that the packet throughput is roughly 3 times as
+	big as the message throughput, meaning that only around one sixth of message requests by clients
+	returned no messages.
     
     \begin{figure}[ht]
     \centering
@@ -1327,6 +1301,150 @@ and source code management system.
         \caption{Middleware response time for different request types, averaged over an interval of one minute.}
         \label{fig:response-time}
     \end{figure}
+    
+	\Cref{fig:response-time} shows the middleware response time as measured by the clients over time.
+	The response time is averaged over the interval of one minute for each of the shown curves.
+	
+	The averaged middleware response time seems fairly stable over long periods of time, the individual
+	measurements however fluctuate quite heavily as can be seen by the relatively large standard deviation.
+	This effect is not very concerning as the absolute value of the standard deviation (generally less than
+	25ms) is quite small and can easily be caused by interference of other tasks run on the same physical
+	machine.
+	
+	The different types of requests take roughly the same time to complete, message request misses being
+	slightly faster than the rest. This is caused directly by the way the database operates, it neither has
+	to write or read any complex data as the necessary information is already available in the index. 
+	
+	\begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/distribution}
+        \caption{Middleware response time distribution measured in chunks of 1 millisecond.}
+        \label{fig:distribution}
+    \end{figure}
+    
+    \Cref{fig:distribution} shows the distribution of the observed middleware response time during
+    the two hour long experiment. As expected it roughly follows a normal distribution with no
+    values being higher than one second.
+
+\subsection{Benchmarks}
+	\begin{table}[hp]
+        \centering
+        \rowcolors{1}{Gray}{white}
+        \begin{tabular}{$l^c^r}
+            \rowcolor{DarkGray}
+            \rowstyle{\bfseries}
+            Phase & Time & Relative\\
+            \hline
+            Waiting for client & \SI{79}{\micro\second} & 0.82\%\\
+            Parsing request & \SI{14}{\micro\second} & 0.15\%\\    
+            Waiting for database & \SI{9,574}{\micro\second} & 98.80\%\\
+            Responding & \SI{22}{\micro\second} & 0.23\%\\       
+        \end{tabular}
+        \caption{Time spent on various tasks by middleware workers}
+        \label{tbl:benchmark}
+    \end{table}
+    
+    \Cref{tbl:benchmark} shows the time spent by the middleware on various tasks while handline a
+    request. It is clearly visible that most of the time, over 98\%, is spent waiting for the database.
+    From \cref{fig:response-time} we can also conclude that around half of the time a request takes is
+    spent by the middleware and the other half is needed for networking.
+
+\newpage
+\subsection{Scalability}
+	We conducted various experiments to figure out the optimal parameters for the system and see how
+	well it scales with higher load.
+
+\subsubsection{Worker Thread Count}
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/worker}
+        \caption{Throughput and response time for varying number of worker instances}
+        \label{fig:worker}
+    \end{figure}
+    
+    \Cref{fig:worker} shows the system with a varying number of worker threads but the same
+    number of database connections (25). It can be seen that increasing the worker thread count beyond
+    the number of database connections clearly doesn't increase throughput, it can even be lowered and
+    the system performs equally well.
+
+\newpage
+\subsubsection{Database Connection Count}
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/db}
+        \caption{Throughput and response time for varying number of database connections}
+        \label{fig:db}
+    \end{figure}
+    
+    \Cref{fig:db} shows the performance of the system with various numbers of database connections and
+    a static number of worker threads (25). It can again be seen that the optimal performance is already
+    reached with only 15 connections. The fact that the performance doesn't increase until the number
+    of worker threads is reached shows that the database can in fact not process requests any faster
+    than our middleware is able to send over 15 connections.
+
+\newpage
+\subsubsection{Combined Database Connection and Worker Thread count}
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/db+worker}
+        \caption{Throughput and response time for varying number of worker instances and database connections}
+        \label{fig:db+worker}
+    \end{figure}
+    
+    Since worker thread and database connection count seem to be linked we increased them together as shown in
+    \cref{fig:db+worker}. Again, the best performance is achieved around a value of 20 and it decreases
+    slowly as more workers and connections are added. The steep slope to the left of the optimal value
+    is the range where the database still has free resources and the middleware can't make requests
+    fast enough. 
+
+\newpage
+\subsubsection{Client Retry Delay}
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/client-delay}
+        \caption{Throughput and response time for varying client retry delay}
+        \label{fig:client-delay}
+    \end{figure}
+    
+    In this experiment we varied the amount of time a client waits before retrying to retrieve a message.
+    As seen in \cref{fig:client-delay} this parameter doesn't have a very huge impact on the message throughput
+    of the system, it does however decreases the overall packet count (and therefore throughput) because
+    less packets are wasted when querying for nonexisting messages. A higher retry delay also causes the
+    average response time to decrease as the middleware can process the lower number of packets much faster.
+    The ideal value in regard to message throughput appears to be between 80 and \SI{100}{\milli\second}.
+
+\newpage
+\subsubsection{Client Count}
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/client}
+        \caption{Throughput and response time for varying number of clients}
+        \label{fig:client}
+    \end{figure}
+    
+    When running the system with an increased number of clients we noticed a small but clear drop in 
+    message throughput as can be seen in the right half of \cref{fig:client}. When using less clients
+    than the usual 90 the system was underloaded which also resulted in much lower throughput of both
+    messages and network packets. The response time steadily rises with the growing number of clients
+    as expected. It's also noticeable how the system behaves much more predictably while underloaded
+    than overloaded as can be seen by the very small standard deviation for low numbers of clients.
+    
+\newpage
+\subsubsection{Middleware Count}
+    \begin{figure}[ht]
+    \centering
+        \includegraphics[width=0.9\textwidth]{graphs/multi}
+        \caption{Throughput and response time for varying number of clients with both one and two middleware instances}
+        \label{fig:multi}
+    \end{figure}
+    
+    We conducted most of our experiments on a single middleware instance as it was already evident
+    that not the middleware but the database was limiting the system performance. The two measurements
+    shown in \cref{fig:multi} proof that adding more middleware instances does indeed not improve
+    performance. The second middleware was run on the same {\it EC2} instance as the first one, but
+    we payed close attention to the usage of memory, CPU and the network to make sure they wouldn't
+    interfere with each other.
+    
 
 \chapter{Future Work}
 	
