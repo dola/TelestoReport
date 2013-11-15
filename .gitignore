@@ -8,3 +8,5 @@ report.pdf
 *.aux
 *.log
 
+/report.out
+/report.toc
