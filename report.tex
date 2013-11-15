@@ -1039,8 +1039,8 @@ and source code management system.
     file\websource{Java Documentation: java.util.Properties
     }{http://docs.oracle.com/javase/7/docs/api/java/util/Properties.html}{November
     15, 2013} containing parameters like the middleware address or database
-    connection information. Details about these parameters are explained in
-    \TODO{ref: section with parameters for test}.
+    connection information. Details about these parameters and how they were
+    varied over multiple tests, are explained in \cref{sec:parameters}.
 
 \subsection{Command Line Parameters}
     Even if the code base is organized in a way that would allow building
@@ -1057,8 +1057,8 @@ and source code management system.
     \begin{description}
     \item[name] The {\tt client\_name} to be used (registers new client)
     \item[id] The {\tt client\_id} (identifies as existing client)
-    \item[test] An identifier for the test to run (see section \TODO{section
-    with client types})
+    \item[test] An identifier for the test to run (see section
+    \cref{sec:client-types})
     \end{description}
 
     These additional arguments are always supplied as key-value pairs separated
@@ -1073,22 +1073,71 @@ and source code management system.
 \section{Setup}
 	We conducted all experiments on the {\it Amazon Elastic Compute Cloud}\websource{Amazon EC2
     Website}{http://aws.amazon.com/ec2/}{November 15, 2013} (EC2).
-    One large general purpose instance was used for each the database, the middlware and the clients.
+    One large general purpose instance was used for each the database, the
+    middleware and the clients.
     The experiments were controlled by a fourth instance which was allowed shell access on all of the
-    other ones. All instances were placed on the same sub-network withing {\it Amazon}'s network in order
+    other ones. All instances were placed on the same sub-network within {\it Amazon}'s network in order
     to minimize network latency.
     
-    The experiments were controlled by a single configuration file which was distributed by
-    the controlling instance to the clients and the middleware automatically for each test.
-    Given a number of these configuration files the controlling instance was able to run multiple
-    experiments completely autonomous.
+    The experiments were controlled by a single configuration file which was
+    automatically distributed by the controlling instance to the clients and the
+    middleware for each test, using a {\tt bash} script.
+    Given a number of these configuration files the controlling instance was
+    able to run multiple experiments completely autonomous.
     
     The clients and the middleware are built to measure the duration of each phase a request goes
     through and write the results into a log file which is collected by the controlling instance
     and can then be processed.
+    
+\section{Client Types}
+\label{sec:client-types}
+
+    The system was tested using three different kind of clients to simulate a
+    practical workload that includes multiple different applications of a
+    message passing system:
+    
+    \begin{description}
+    \item[One Way] \ \\
+        These clients send a message containing a counter value to a random
+        other client of the same type and then wait for a message for them. Upon
+        receiving a message they increase the counter and again send it to a
+        random other client. This was implemented using a single queue for all
+        one way clients.
+    \item[Request Response Pair] \ \\
+        These clients act in pairs as client and server. They basically send
+        messages back and forth between them both increasing a counter which is
+        part of the message text. All these clients again use only one
+        single queue.
+    \item[Request Response Pool] \ \\
+        Contrary to the clients acting in pairs, these clients act in two
+        equally sized pools of clients and servers. Clients make a request which
+        is answered by any client of the server pool. All requests and responses
+        were stored in the same queue.
+    \end{description}
+    
+    All tests described below were conducted using the distribution shown
+    in~\cref{tbl:client-type-distribution}.
+
+    \begin{table}[hp]
+        \centering
+        \rowcolors{1}{Gray}{white}
+        \begin{tabular}{$l^c^r}
+            \rowcolor{DarkGray}
+            \rowstyle{\bfseries}
+            Client Type & Fraction \\
+            \hline
+            One Way & $5/9$ \\
+            Request Response Pair & $2/9$ \\
+            Request Response Pool & $2/9$ \\
+        \end{tabular}
+        \caption{Client type distribution for all tests}
+        \label{tbl:client-type-distribution}
+    \end{table}
 
 \newpage
 \section{Parameters}
+\label{sec:parameters}
+
 	All experiments were run with the same basic parameters, save the ones being experimented on.
 	Before each experiment the database was emptied to get consistent results.
 	The default parameters are listed in \cref{tbl:parameters}.
