@@ -43,6 +43,7 @@ This first milestone for the course project had a maximum possible score of 260 
  - Didn’t implement different client types
  - Good documented code
  - No dynamic configuration
+
 98/115 Points
  
 ### Experiments
@@ -50,12 +51,14 @@ This first milestone for the course project had a maximum possible score of 260 
  - No proper bottleneck analysis
  - Several middleware servers on same machine
  - No correlation with design
+
 79/115 Points
  
 ### Report
  - In general a good report
  - Testing not covered in Report
  - Incomplete Analysis in Report
+
 20/30 Points
  
-197 Points
+**Total:** 197/260 Points
