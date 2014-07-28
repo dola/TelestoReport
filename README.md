@@ -1,5 +1,8 @@
 # Telesto Report
-This repository contains the current state of the report for the Telesto Message Passing System developed by Simon Marti and Dominic Langenegger during the Advanced Systems Lab course at ETH Zurich in fall 2013.
+This repository contains the current state of the report for the Telesto Message Passing System developed by Simon Marti and Dominic Langenegger during the Advanced Systems Lab course at ETH Zurich in fall 2013. You can check out the code to the report in [this repo](https://github.com/dola/Telesto).
+
+## License
+This report is licensed under the [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 ## Comments on System
 
